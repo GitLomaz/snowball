@@ -16,6 +16,7 @@ let cooldownTween; // tween that runs when taking damage
 let yetiLevel = 1; // yeti level
 let yetiDeaths = 0; // total killed
 let alertText; // notices
+let animal = animals[Phaser.Math.Between(0, 191)].toUpperCase();
 
 // item select menu
 let btnSnow;
@@ -27,6 +28,9 @@ let btnSell;
 let shovelSpeed = 80;
 let snowTick = 1000;
 let snowfallRate = 3;
+
+let showScores = false;
+let submission = false;
 
 // other
 let powerups = ["snow", "shovel", "shovel", "shovel", "heart"];

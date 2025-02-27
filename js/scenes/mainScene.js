@@ -6,19 +6,30 @@ let menuScene = new Phaser.Class({
     });
   },
   preload: function () {
-    this.load.image("grass", "images/grass.png");
+    scene = this
+    this.load.image("grass", "images/grassNew.png");
     this.load.image("fallingSnow", "images/snowFall.png");
     this.load.image("play", "images/play.png");
     this.load.image("play-o", "images/play-over.png");
+    this.load.image("highscore", "images/highscore.png");
     this.load.image("logo", "images/logo.png");
     this.load.image("tutorial", "images/tutorial.png");
     this.load.image("tutorial-o", "images/tutorial-over.png");
+    this.load.image("scores", "images/scores.png");
+    this.load.image("scores-o", "images/scores-over.png");
+    this.load.image("back", "images/back.png");
+    this.load.image("back-o", "images/back-over.png");
+    this.load.image("submit", "images/submit.png");
+    this.load.image("submit-o", "images/submit-over.png");
     this.load.image("guide", "images/guide.png");
     this.load.image("discord", "images/discord.png");
+    this.load.image("tree", "images/tree.png");
 
-    this.load.spritesheet("snow", "images/snow.png", {
+    this.load.spritesheet("snow", "images/snowNew-ex.png", {
       frameWidth: 48,
       frameHeight: 48,
+      margin: 1,
+      spacing: 2
     });
     this.load.spritesheet("snowball", "images/snowball.png", {
       frameWidth: 48,
@@ -45,14 +56,32 @@ let menuScene = new Phaser.Class({
     let playBtn = this.add
       .image(350, 520, "play")
       .setOrigin(0)
-      .setInteractive();
+      .setInteractive({ cursor: 'pointer' })
     let tutBtn = this.add
       .image(50, 520, "tutorial")
       .setOrigin(0)
-      .setInteractive();
+      .setInteractive({ cursor: 'pointer' })
+    let backBtn = this.add
+      .image(50, 520, "back")
+      .setOrigin(0)
+      .setInteractive({ cursor: 'pointer' })
+    let scoreBtn = this.add
+      .image(650, 520, "scores")
+      .setOrigin(0)
+      .setInteractive({ cursor: 'pointer' })
     playBtn.depth = 1;
+    backBtn.depth = 1;
     tutBtn.depth = 1;
+    scoreBtn.depth = 1;
     logo.depth = 1;
+
+    backBtn.on("pointerover", function (event) {
+      this.setTexture("back-o");
+    });
+
+    backBtn.on("pointerout", function (event) {
+      this.setTexture("back");
+    });
 
     playBtn.on("pointerover", function (event) {
       this.setTexture("play-o");
@@ -68,6 +97,14 @@ let menuScene = new Phaser.Class({
 
     tutBtn.on("pointerout", function (event) {
       this.setTexture("tutorial");
+    });
+
+    scoreBtn.on("pointerover", function (event) {
+      this.setTexture("scores-o");
+    });
+
+    scoreBtn.on("pointerout", function (event) {
+      this.setTexture("scores");
     });
 
     playBtn.on(
@@ -88,7 +125,34 @@ let menuScene = new Phaser.Class({
     tutBtn.on("pointerdown", function () {
       guide.depth = 2;
       playBtn.depth = 3;
+    });    
+    
+    backBtn.on("pointerdown", function () {
+      showScores = false
+      discordBackground.visible = true
+      discordButton.visible = true
+      scoreBtn.visible = true
+      tutBtn.visible = true
+      logo.visible = true
+      highScoreTitle.visible = false 
+      backBtn.visible = false
+      _.each(scene.scores, function(score) {
+        score.destroy()
+      })
     });
+
+    scoreBtn.on("pointerdown", function () {
+      showScores = true
+      discordBackground.visible = false
+      discordButton.visible = false
+      scoreBtn.visible = false
+      tutBtn.visible = false
+      logo.visible = false
+      highScoreTitle.visible = true 
+      backBtn.visible = true
+      buildHighScores()
+    });
+
     for (let x = 0; x < 20; x++) {
       for (let y = 0; y < 20; y++) {
         snow = this.physics.add.image(x * 48 + 24, y * 48 + 16, "snow");
@@ -131,7 +195,7 @@ let menuScene = new Phaser.Class({
 
     discordButton = this.add
       .image(775, 580, "discord")
-      .setInteractive()
+      .setInteractive({ cursor: 'pointer' })
       .setScale(0.01);
     discordButton.on(
       "pointerup",
@@ -147,10 +211,33 @@ let menuScene = new Phaser.Class({
       },
       this
     );
+
+    let highScoreTitle = this.add.text(400, 100, "Hall Of Fame", {
+      fontFamily: 'myFont',
+      fontSize: "64px",
+      align: "center",
+      align: "center",
+      stroke: '#330030',
+      strokeThickness: 4
+    });
+    highScoreTitle.setOrigin(.5)    
+
+    if (showScores) {
+      discordBackground.visible = false
+      discordButton.visible = false
+      scoreBtn.visible = false
+      tutBtn.visible = false
+      logo.visible = false
+      buildHighScores()
+    } else {
+      highScoreTitle.visible = false   
+      backBtn.visible = false  
+    }
   },
 
   update: function () {
     this.tileCounter++;
+
     // It's snowing!
     for (let i = 0; i < snowfallRate; i++) {
       let x = Phaser.Math.Between(0, 2400); // 50 * 48
@@ -270,3 +357,60 @@ let menuScene = new Phaser.Class({
     });
   },
 });
+
+function buildHighScores() {
+  scene.loading = scene.add.text(400, 300, "Loading . . .", {
+    fontFamily: 'myFont',
+    fontSize: "32px",
+    align: "center",
+    stroke: '#330030',
+    strokeThickness: 4
+  });
+  scene.loading.setOrigin(.5)  
+  scene.scores = [] 
+  if (submission) {
+    $.ajax({
+      type: "POST",
+      // url: "https://us-dev.nightscapes.io/arena/score.php",
+      url: "https://us-dev.nightscapes.io/snowball/score.php",
+      data: { data: submission },
+      dataType: "json",
+      success: function (res) {
+        scene.loading.visible = false
+        _.each(res.scores, function (score, i) {
+          let item = new ScoreItem(115, 150 + i * 30, i + 1, score.name, score.score)
+          scene.scores.push(item)
+          scene.add.existing(item);
+        });
+        if (res.position) {
+          let item = new ScoreItem(115, 150 + 310, res.position, res.name, res.score)
+          scene.scores.push(item)
+          scene.add.existing(item);
+        }
+      },
+    });
+    submission = false
+  } else {
+    $.ajax({
+      // url: "https://us-dev.nightscapes.io/arena/score.php",
+      url: "https://us-dev.nightscapes.io/snowball/score.php",
+      type: "GET",
+      dataType: "json",
+      success: function (res) {
+        scene.loading.visible = false
+        _.each(res.scores, function (score, i) {
+          let item = new ScoreItem(
+            115,
+            150 + i * 30,
+            i + 1,
+            score.name,
+            score.score
+          );
+          scene.add.existing(item);
+          scene.scores.push(item)
+        });
+      },
+    });
+  }
+
+}

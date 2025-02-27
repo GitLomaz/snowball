@@ -1,6 +1,6 @@
 let gameScene = new Phaser.Class({
   Extends: Phaser.Scene,
-  initialize: function zoneScene() {
+  initialize: function gameScene() {
     Phaser.Scene.call(this, {
       key: "gameScene",
     });
@@ -13,17 +13,21 @@ let gameScene = new Phaser.Class({
     this.load.audio("powerup_spawn", "sounds/effects/powerup_spawn.mp3");
     this.load.audio("background_music", "sounds/music/background_music.mp3");
 
+    this.load.image("play", "images/play.png");
+    this.load.image("play-o", "images/play-over.png");
+    this.load.image("submit", "images/submit.png");
+    this.load.image("submit-o", "images/submit-over.png");
+
     this.load.image("pu-heart", "images/pu-heart.png");
     this.load.image("pu-snow", "images/pu-snow.png");
     this.load.image("pu-shovel", "images/pu-shovel.png");
+    this.load.image("backplate", "images/backplat.png");
+    this.load.image("skillBackground", "images/skillBackground.png");
     this.load.image("x", "images/x.png");
     this.load.image("fallingSnow", "images/snowFall.png");
     this.load.image("tilesheet", "images/tiles-ex.png");
+    this.load.image("tree", "images/tree.png");
     this.load.tilemapTiledJSON("Arena", "json/field.json");
-    this.load.spritesheet("snow", "images/snow.png", {
-      frameWidth: 48,
-      frameHeight: 48,
-    });
     this.load.spritesheet("options", "images/options.png", {
       frameWidth: 48,
       frameHeight: 48,
@@ -43,7 +47,6 @@ let gameScene = new Phaser.Class({
   },
 
   create: function () {
-    // set scene for global access
     scene = this;
 
     yetiLevel = 1;
@@ -109,6 +112,7 @@ let gameScene = new Phaser.Class({
     player.body.setSize(40, 40);
     player.snow = 100;
     player.score = 0;
+    player.knockback = 0
     player.alive = true;
     player.setCollideWorldBounds(true);
     player.body.setBoundsRectangle(
@@ -262,56 +266,56 @@ let gameScene = new Phaser.Class({
     });
 
     // loading bar for item construction
-    loadingBar = this.add.rectangle(100, 100, 40, 5, 0x00ff00);
+    loadingBar = this.add.rectangle(100, 100, 40, 5, 0x008200);
     loadingBar.scaleX = 0;
     loadingBar.setOrigin(0, 0);
 
-    scoreRectangle = this.add.rectangle(0, 0, 150, 110, 0x344b50, 0.8);
-    scoreRectangle.setOrigin(0, 0).setScrollFactor(0);
+    scoreRectangle = this.add.sprite(0, 0, 'backplate');
+    scoreRectangle.setOrigin(0, 0).setScrollFactor(0).setDepth(10)    
+    
+    skillRectangle = this.add.sprite(295, 525, 'skillBackground');
+    skillRectangle.setOrigin(0, 0).setScrollFactor(0).setDepth(10)
 
     fontConfig = {
-      fontFamily: 'Arial, "DejaVu Sans", Calibri, sans-serif',
-      fontSize: "18px",
-      fontStyle: "bold",
-      stroke: "#000",
-      strokeThickness: 1,
-      shadow: {
-        offsetX: 2,
-        offsetY: 1,
-        color: "#5fcde4",
-        blur: 1,
-        stroke: true,
-        fill: true,
-      },
+      fontFamily: 'myFont, Arial, "DejaVu Sans", Calibri, sans-serif',
+      fontSize: "17px",
+      color: "#5b8da6",
+      stroke: '#9bbdd6',
+      strokeThickness: 2,
     };
 
     // resources indicator
     snowCounter = this.add
-      .text(3, 3, "Snow: " + player.snow, fontConfig)
-      .setScrollFactor(0);
+      .text(13, 8, "Snow: " + player.snow, fontConfig)
+      .setScrollFactor(0).setDepth(10);
     scoreCounter = this.add
-      .text(3, 23, "Score: " + player.snow, fontConfig)
-      .setScrollFactor(0);
+      .text(13, 28, "Score: " + player.snow, fontConfig)
+      .setScrollFactor(0).setDepth(10);
     yetiCounter = this.add
-      .text(3, 43, "Active Yetis: " + player.snow, fontConfig)
-      .setScrollFactor(0);
+      .text(13, 48, "Active Yetis: " + player.snow, fontConfig)
+      .setScrollFactor(0).setDepth(10);
     levelCounter = this.add
-      .text(3, 63, "Yeti Level: " + player.snow, fontConfig)
-      .setScrollFactor(0);
+      .text(13, 68, "Yeti Level: " + player.snow, fontConfig)
+      .setScrollFactor(0).setDepth(10);
     healthCounter = this.add
-      .text(3, 83, "Health: " + player.snow, fontConfig)
-      .setScrollFactor(0);
+      .text(13, 88, "Health: " + player.snow, fontConfig)
+      .setScrollFactor(0).setDepth(10);
     fontConfig.fontSize = "36px";
     fontConfig.align = "center";
     alertText = this.add.text(0, 400, "", fontConfig).setScrollFactor(0);
     alertText.setFixedSize(800, 300);
     alertText.alpha = 0;
+    alertText.setDepth(500)
+    scoreText = this.add.text(0, 200, "", fontConfig).setScrollFactor(0);
+    scoreText.setFixedSize(800, 300);
+    scoreText.alpha = 0;
+    scoreText.setDepth(500)
 
     btnSell = this.add
-      .image(750, 550, "options")
+      .image(472, 552, "options")
       .setScrollFactor(0)
-      .setInteractive();
-    btnSell.setFrame(2);
+      .setInteractive({ cursor: 'pointer' })
+    btnSell.setFrame(2).setDepth(10);
     btnSell.on("pointerdown", function (event) {
       btnSell.clearTint();
       btnTower.clearTint();
@@ -322,10 +326,10 @@ let gameScene = new Phaser.Class({
       action = "sell";
     });
     btnTower = this.add
-      .image(700, 550, "options")
+      .image(472 - 50, 552, "options")
       .setScrollFactor(0)
-      .setInteractive();
-    btnTower.setFrame(3);
+      .setInteractive({ cursor: 'pointer' })
+    btnTower.setFrame(3).setDepth(10);
     btnTower.on("pointerdown", function (event) {
       btnSell.clearTint();
       btnTower.clearTint();
@@ -336,10 +340,10 @@ let gameScene = new Phaser.Class({
       action = "tower";
     });
     btnWall = this.add
-      .image(650, 550, "options")
+      .image(372, 552, "options")
       .setScrollFactor(0)
-      .setInteractive();
-    btnWall.setFrame(0);
+      .setInteractive({ cursor: 'pointer' })
+    btnWall.setFrame(0).setDepth(10);
     btnWall.on("pointerdown", function (event) {
       btnSell.clearTint();
       btnTower.clearTint();
@@ -350,10 +354,10 @@ let gameScene = new Phaser.Class({
       action = "wall";
     });
     btnSnow = this.add
-      .image(600, 550, "options")
+      .image(372 - 50, 552, "options")
       .setScrollFactor(0)
-      .setInteractive();
-    btnSnow.setFrame(1);
+      .setInteractive({ cursor: 'pointer' })
+    btnSnow.setFrame(1).setDepth(10);
     btnSnow.tint = 0x00ff00;
     btnSnow.on("pointerdown", function (event) {
       btnSell.clearTint();
@@ -371,9 +375,31 @@ let gameScene = new Phaser.Class({
     swapparooni["x"] = "y";
     swapparooni["y"] = "x";
     enemies = [];
+    trees = [];
     enemiesGroup = this.physics.add.group();
+    treesGroup = this.physics.add.group({
+      immovable: true,
+    });
     snowballsGroup = this.physics.add.group();
     this.cameras.main.fadeIn(200);
+
+    for (let i = 0; i < 100; i++) {
+      let y = (i * 24)
+      let x = Phaser.Math.Between(60, 340)
+      spawnTree(x, y, treesGroup)
+      spawnTree(y, x, treesGroup)
+
+
+      y = (i * 24)
+      x = Phaser.Math.Between(2020, 2300)
+      spawnTree(x, y, treesGroup)
+      spawnTree(y, x, treesGroup)
+    }
+
+    this.physics.add.collider(
+      enemiesGroup,
+      treesGroup
+    )
 
     snow_crunch = this.sound.add("snow_crunch");
     snowball_throw = this.sound.add("snowball_throw");
@@ -394,6 +420,7 @@ let gameScene = new Phaser.Class({
       healthCounter.setText("Health: " + player.health + " / 100");
 
       // can't walk through buildingPhysicsGroup
+      this.physics.world.collide(player, treesGroup);
       this.physics.world.collide(player, buildingPhysicsGroup);
       this.physics.world.collide(
         enemiesGroup,
@@ -401,16 +428,18 @@ let gameScene = new Phaser.Class({
         function (a, b) {
           if (!b.cooldownTween) {
             b.health = b.health - a.damage;
-            b.cooldownTween = scene.tweens.add({
-              targets: b,
-              ease: "Linear",
-              tint: 0xff0000,
-              duration: 500,
-              yoyo: true,
-              onComplete: function () {
-                b.cooldownTween = null;
-              },
-            });
+            let counter = 0
+            let interval = setInterval(function(){
+              if (counter % 2 === 0) {
+                b.setTint(0xff0000)
+              } else {
+                b.clearTint()
+              }
+              counter++;
+              if (counter === 6) {
+                clearInterval(interval)
+              }
+            }, 100)
             if (b.health <= 0) {
               buildingPhysicsGroup.remove(b);
               b.setFrame(0);
@@ -424,11 +453,9 @@ let gameScene = new Phaser.Class({
 
       // destroy snowball, injur yeti
       this.physics.world.collide(enemiesGroup, snowballsGroup, function (a, b) {
-        a.hit();
+        a.hit(b);
         b.destroy();
       });
-      // this.physics.add.collider(enemiesGroup);
-
       playerLocation = { x: player.x, y: player.y };
       enemies.forEach((enemy) => {
         enemy.moveTowards();
@@ -451,23 +478,30 @@ let gameScene = new Phaser.Class({
           }
 
           if (!cooldownTween && player.alive) {
+            let a = Phaser.Math.Angle.Between(enemy.x, enemy.y, player.x, player.y);
+            let x = Math.cos(a);
+            let y = Math.sin(a);
+            player.body.setVelocityX(x * getRandomInt(100, 400));
+            player.body.setVelocityY(y * getRandomInt(100, 400));
+            player.knockback = 10;
             player.health = player.health - enemy.damage;
-
-            cooldownTween = scene.tweens.add({
-              targets: player,
-              ease: "Linear",
-              tint: 0xff0000,
-              duration: 500,
-              repeat: 0,
-              yoyo: true,
-              onComplete: function () {
-                cooldownTween = null;
-              },
-            });
+            cooldownTween = true
+            let counter = 0
+            let interval = setInterval(function(){
+              if (counter % 2 === 0) {
+                player.setTint(0xff0000)
+              } else {
+                player.clearTint()
+              }
+              counter++;
+              if (counter === 6) {
+                clearInterval(interval)
+                cooldownTween = false
+              }
+            }, 100);
 
             if (player.health <= 25) {
               healthCounter.setColor("#ff0000");
-              healthCounter.setShadow(0, 0, "#ff0000", 0, false, false);
             }
 
             if (player.health <= 0) {
@@ -484,54 +518,58 @@ let gameScene = new Phaser.Class({
       // can't walk through buildingPhysicsGroup
       this.physics.world.collide(player, buildingPhysicsGroup);
 
-      // player movement logic
-      if (cursors.left.isDown || wasd.left.isDown) {
-        interuptBuild();
-        if (gathering) {
-          player.setVelocityX(-shovelSpeed);
-          playAnimation(player, "player-shovelLeft");
-          playSound(snow_crunch);
-        } else {
-          player.setVelocityX(-160);
-          playAnimation(player, "player-walkLeft");
-        }
-      } else if (cursors.right.isDown || wasd.right.isDown) {
-        interuptBuild();
-        if (gathering) {
-          player.setVelocityX(shovelSpeed);
-          playAnimation(player, "player-shovelRight");
-          playSound(snow_crunch);
-        } else {
-          player.setVelocityX(160);
-          playAnimation(player, "player-walkRight");
-        }
-      } else {
-        player.setVelocityX(0);
+      let speed = 200
+      if (gathering) {
+        speed = 100
+        playSound(snow_crunch);
+      }
+      if (player.shovelBonus) {
+        speed = 200
       }
 
-      if (cursors.up.isDown || wasd.up.isDown) {
+      let velocityX = 0
+      let velocityY = 0
+      
+      // player movement logic
+      if ((cursors.left.isDown || wasd.left.isDown) && player.health > 0) {
         interuptBuild();
+        velocityX = -speed
         if (gathering) {
-          player.setVelocityY(-shovelSpeed);
-          // playAnimation(player, 'shovelRight')
-          playSound(snow_crunch);
+          playAnimation(player, "player-shovelLeft");
         } else {
-          player.setVelocityY(-160);
-          // playAnimation(player, 'walkRight')
+          playAnimation(player, "player-walkLeft");
         }
-      } else if (cursors.down.isDown || wasd.down.isDown) {
+      } else if ((cursors.right.isDown || wasd.right.isDown) && player.health > 0) {
         interuptBuild();
+        velocityX = speed
         if (gathering) {
-          player.setVelocityY(shovelSpeed);
-          // playAnimation(player, 'shovelRight')
-          playSound(snow_crunch);
+          playAnimation(player, "player-shovelRight");
         } else {
-          player.setVelocityY(160);
-          // playAnimation(player, 'walkRight')
+          playAnimation(player, "player-walkRight");
         }
-      } else {
-        player.setVelocityY(0);
       }
+
+      if ((cursors.up.isDown || wasd.up.isDown) && player.health > 0) {
+        interuptBuild();
+        velocityY = -speed
+      } else if ((cursors.down.isDown || wasd.down.isDown) && player.health > 0) {
+        interuptBuild();
+        velocityY = speed
+      }
+
+      if (velocityX !== 0 && velocityY !== 0) {
+        velocityX = velocityX * .7
+        velocityY = velocityY * .7
+      }
+
+
+      if (player.knockback === 0) {
+        player.setVelocityX(velocityX)
+        player.setVelocityY(velocityY)
+      } else {
+        player.knockback--;
+      }
+
 
       if (wasd.one.isDown) {
         btnSell.clearTint();
@@ -634,12 +672,12 @@ let gameScene = new Phaser.Class({
 
       // check snow under the feet
       // and powerups!
-      var bodies = this.physics.overlapCirc(player.x, player.y, 3, true, true);
+      var bodies = this.physics.overlapCirc(player.x, player.y, 10, true, true);
       _.each(bodies, function (body) {
         if (body && body.gameObject && body.gameObject.snowAmount) {
           if (gathering && body.gameObject.snowAmount > 0) {
             // collecting snow!
-            player.snow += body.gameObject.snowAmount;
+            player.snow += Math.floor(body.gameObject.snowAmount * 1.5);
             snowCounter.setText("Snow: " + player.snow);
             body.gameObject.snowAmount = 0;
             body.gameObject.setFrame(0);
@@ -648,16 +686,15 @@ let gameScene = new Phaser.Class({
           activatePowerup(body.gameObject.powerup);
           body.gameObject.destroy();
           if (player.health > 25) {
-            healthCounter.setColor("#fff");
-            healthCounter.setShadow(2, 1, "#5fcde4", 1, true, true);
+            healthCounter.setColor("#5b8da6");
           }
           playSound(powerup_spawn);
         }
       });
 
       // throw snowballs
-      if (counter % 20 == 0 && player.snow >= 5 && !gathering) {
-        player.snow = player.snow - 5;
+      if (counter % 20 == 0 && player.snow >= 3 && !gathering) {
+        player.snow = player.snow - 3;
         snowCounter.setText("Snow: " + player.snow);
         if (player.x < this.cameras.main.scrollX + this.input.x) {
           playAnimation(player, "player-throwRight");
@@ -682,6 +719,9 @@ let gameScene = new Phaser.Class({
       }
 
       puCounter++;
+      if (puCounter % 30 == 0) {
+        player.score++
+      }
       if (puCounter % 1800 == 0) {
         spawnPowerup(powerups[Phaser.Math.Between(0, powerups.length)]);
         playSound(powerup_spawn);
@@ -701,7 +741,7 @@ let gameScene = new Phaser.Class({
 
 function throwSnowball(sprite, angle) {
   // create a snowball
-  let snowball = scene.add.circle(sprite.x, sprite.y, 5, 0xcccccc);
+  let snowball = scene.add.circle(sprite.x, sprite.y, 6, 0xcccccc);
   scene.physics.add.existing(snowball, false);
   snowball.body.setMass(0.01);
   snowballsGroup.add(snowball);
@@ -774,6 +814,16 @@ function triggerBuild(type, sprite, group) {
 function interuptBuild() {
   // disable build bar, reset it
   if (loadingTween) {
+    let x = scene.add.sprite(loadingTween.targets[0].x + 20, loadingTween.targets[0].y - 14, "x");
+    scene.tweens.add({
+      targets: x,
+      ease: "Linear",
+      alpha: 0,
+      duration: 800,
+      onComplete: function () {
+        this.targets[0].destroy();
+      },
+    });
     loadingTween.stop();
     loadingBar.scaleX = 0;
     loadingTween = null;
@@ -892,10 +942,10 @@ function spawnPowerup(type = "snow") {
 
 function activatePowerup(type = "shovel") {
   if (type === "shovel") {
+    player.shovelBonus = true
     notice("2x shoveling speed for 30 seconds!");
-    shovelSpeed = shovelSpeed * 2;
     setTimeout(function () {
-      shovelSpeed = 80;
+      player.shovelBonus = false
     }, 30000);
   } else if (type === "snow") {
     notice("5x snow accumulation for 30 seconds!");
@@ -912,15 +962,114 @@ function activatePowerup(type = "shovel") {
 }
 
 function gameOver() {
-  scene.cameras.main.fadeOut(5000);
-  scene.cameras.main.on(
-    "camerafadeoutcomplete",
-    () => {
-      scene.scene.start("menuScene");
+  player.setVelocityX(0)
+  player.setVelocityY(0)
+  let whiteout = scene.add.rectangle(0,0,2000,2000, 0xFFFFFF)
+  whiteout.setOrigin(.5)
+  whiteout.setScrollFactor(0)
+  whiteout.setDepth(400)
+  whiteout.alpha = 0
+  scene.tweens.add({
+    targets: whiteout,
+    ease: "Linear",
+    alpha: 1,
+    duration: 5000,
+  });
+
+  let submitBtn = scene.add
+    .image(350, 420, "submit")
+    .setOrigin(0)
+    .setAlpha(0)
+    .setScrollFactor(0)
+    .setDepth(600)
+    .setInteractive({ cursor: 'pointer' })
+  let playBtn = scene.add
+    .image(50, 420, "play")
+    .setOrigin(0)
+    .setAlpha(0)
+    .setScrollFactor(0)
+    .setDepth(600)
+    .setInteractive({ cursor: 'pointer' })
+
+    
+  submitBtn.on("pointerover", function (event) {
+    this.setTexture("submit-o");
+  });
+
+  submitBtn.on("pointerout", function (event) {
+    this.setTexture("submit");
+  });
+
+  playBtn.on("pointerover", function (event) {
+    this.setTexture("play-o");
+  });
+
+  playBtn.on("pointerout", function (event) {
+    this.setTexture("play");
+  });
+
+  playBtn.on(
+    "pointerdown",
+    function () {
+      scene.cameras.main.fadeOut(200);
+      $('#user').fadeOut(200)
+      scene.cameras.main.on(
+        "camerafadeoutcomplete",
+        () => {
+          scene.scene.start("gameScene");
+        },
+        scene
+      );
     },
     scene
   );
-  notice("You have died!\r\nScore: " + player.score);
+
+  submitBtn.on(
+    "pointerdown",
+    function () {
+      submission = btoa(
+        '{ "name": "' +
+          $("#user").val().toUpperCase() +
+          '", "score": ' +
+          player.score +
+          "}"
+      );
+      animal = $("#user").val().toUpperCase();
+      // submitScore("Highest Score", scene.player.score);
+      showScores = true;
+      scene.cameras.main.fadeOut(200);
+      $('#user').fadeOut(200)
+      scene.cameras.main.on(
+        "camerafadeoutcomplete",
+        () => {
+          scene.scene.start("menuScene");
+        },
+        scene
+      );
+
+    },
+    scene
+  );
+  submitScore("High Score", scene.day);
+  scoreText.setText("You have died!\r\nScore: " + displayNumber(player.score))
+  scene.tweens.add({
+    targets: [submitBtn, playBtn, scoreText],
+    ease: "Linear",
+    alpha: 1,
+    duration: 1000,
+  });
+  $('#user').fadeIn(1000)
+  $('#user').focus()
+  $('#user').val(animal)
+  scene.input.keyboard.clearCaptures()
+}
+
+function spawnTree(x, y, treesGroup) {
+
+  let tree = new Tree(x, y)
+  
+  treesGroup.add(tree)
+  trees.push(tree);
 }
 
 function spawnEnemy() {
@@ -940,10 +1089,7 @@ function spawnEnemy() {
     )
   );
   enemiesGroup.add(enemies[enemies.length - 1]);
-
-  scene.physics.add.existing(enemies[enemies.length - 1]);
-  scene.add.existing(enemies[enemies.length - 1]);
-  enemies[enemies.length - 1].setSize(38, 38);
+  // enemies[enemies.length - 1].setSize(38, 38);
 }
 
 function notice(text) {
