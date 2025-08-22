@@ -369,10 +369,12 @@ function buildHighScores() {
   scene.loading.setOrigin(.5)  
   scene.scores = [] 
   if (submission) {
+    submission.game = "snowball";
     $.ajax({
       type: "POST",
       // url: "https://us-dev.nightscapes.io/arena/score.php",
-      url: "https://us-dev.nightscapes.io/snowball/score.php",
+      // url: "https://us-dev.nightscapes.io/scores/score.php",
+      url: "https://us-dev.nightscapes.io/scores/submitScores.php",
       data: { data: submission },
       dataType: "json",
       success: function (res) {
@@ -393,7 +395,8 @@ function buildHighScores() {
   } else {
     $.ajax({
       // url: "https://us-dev.nightscapes.io/arena/score.php",
-      url: "https://us-dev.nightscapes.io/snowball/score.php",
+      // url: "https://us-dev.nightscapes.io/snowball/score.php",
+      url: "https://us-dev.nightscapes.io/scores/submitScores.php?game=snowball",
       type: "GET",
       dataType: "json",
       success: function (res) {
