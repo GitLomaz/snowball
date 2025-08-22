@@ -1028,7 +1028,7 @@ function gameOver() {
     "pointerdown",
     function () {
       submission = btoa(
-        '{ "name": "' +
+        '{ "game": "snowball", "name": "' +
           $("#user").val().toUpperCase() +
           '", "score": ' +
           player.score +
